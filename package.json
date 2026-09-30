@@ -1,0 +1,60 @@
+{
+  "name": "emotistudio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"node --import tsx --watch server/index.ts\" \"vite --host 127.0.0.1\"",
+    "build": "tsc --noEmit && vite build",
+    "start": "node --import tsx server/index.ts",
+    "test": "node --import tsx --test --test-concurrency=1 tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "backup": "node --import tsx scripts/backup.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "node harness/scripts/install-hooks.mjs",
+    "hooks:install": "node harness/scripts/install-hooks.mjs",
+    "harness:check": "python3 -B harness/scripts/verify_base.py",
+    "harness:implementation": "python3 -B harness/scripts/verify_base.py --implementation",
+    "test:harness": "python3 -B -m unittest discover -s harness/tests -p 'test_*.py' && node --test harness/tests/git-policy.test.mjs",
+    "qa": "npm run format:check && npm run harness:check && npm run test:harness && npm run typecheck && npm test && npm run build",
+    "verify": "npm run qa && npm run test:e2e"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "lucide-react": "^0.468.0",
+    "multer": "^2.0.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sharp": "^0.35.5",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.55.0",
+    "@types/archiver": "^6.0.3",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/supertest": "^6.0.3",
+    "@vitejs/plugin-react": "^6.0.0",
+    "concurrently": "^9.2.0",
+    "prettier": "^3.9.9",
+    "supertest": "^7.1.4",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.1"
+  }
+}

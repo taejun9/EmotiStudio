@@ -1,0 +1,12 @@
+node_modules
+dist
+data
+.git
+.env
+.env.*
+playwright-report
+test-results
+
+.worktree
+backups
+__pycache__

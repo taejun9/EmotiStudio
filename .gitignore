@@ -1,0 +1,15 @@
+node_modules
+dist/
+data/
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+.DS_Store
+
+backups/
+
+__pycache__/
+*.py[cod]
+.worktree/

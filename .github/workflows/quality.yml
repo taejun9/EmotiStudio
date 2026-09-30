@@ -1,0 +1,61 @@
+name: Quality
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate branch and commit history
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$SOURCE_BRANCH" != "main" && ! "$SOURCE_BRANCH" =~ ^codex/plan-[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "Use a codex/plan-NNN-task branch."
+            exit 1
+          fi
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+            BASE_SHA=$(git merge-base origin/main "$HEAD_SHA")
+          fi
+          node harness/scripts/git-policy.mjs range "$BASE_SHA" "$HEAD_SHA"
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            PLAN_NAME="${SOURCE_BRANCH#codex/}"
+            test -f "docs/exec_plans/completed/$PLAN_NAME.md"
+            test -f "docs/reviews/$PLAN_NAME.md"
+          fi
+      - name: Validate the proposed merge message
+        run: node harness/scripts/check-pr.mjs
+      - run: npm ci
+      - run: npm run qa
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
