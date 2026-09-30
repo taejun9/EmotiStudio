@@ -46,7 +46,7 @@ export function resolveImageFile(url: string, publicDir: string, assetsDir: stri
   if (/^\/api\/assets\/[a-f0-9-]+\.(png|webp|gif)$/.test(url))
     return path.join(assetsDir, path.basename(url));
   if (
-    /^\/samples\/(reference|hello|love|sleepy|thanks|cheer|sorry|animations\/wave|characters\/neulbo|characters\/tokki)\.png$/.test(
+    /^\/samples\/(reference|hello|love|sleepy|thanks|cheer|sorry|animations\/wave|characters\/neulbo|characters\/tokki(?:-v2)?)\.png$/.test(
       url,
     )
   )

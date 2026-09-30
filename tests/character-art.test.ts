@@ -209,3 +209,49 @@ test('preset revisions change pose/expression while invalid character and scene 
   await assert.rejects(renderCharacterSticker('tokki', 24, { animated: true }));
   await assert.rejects(renderCharacterSticker('tokki', 0, { animated: true, variant: -1 }));
 });
+
+test('Tokki v2 keeps upright pink ears, white fur, round cheeks and a pink backpack at chat size', async () => {
+  const { png } = await renderCharacterSticker('tokki', 0, { animated: false });
+  const raw = await sharp(png).ensureAlpha().raw().toBuffer();
+  const count = (
+    bounds: [number, number, number, number],
+    match: (r: number, g: number, b: number) => boolean,
+  ) => {
+    const [left, top, width, height] = bounds;
+    let found = 0;
+    for (let y = top; y < top + height; y++)
+      for (let x = left; x < left + width; x++) {
+        const i = (y * 360 + x) * 4;
+        if (raw[i + 3] === 255 && match(raw[i]!, raw[i + 1]!, raw[i + 2]!)) found++;
+      }
+    return found;
+  };
+  const pink = (r: number, g: number, b: number) =>
+    r > 230 && g > 140 && g < 235 && b > 150 && b < 235 && r - g > 20;
+  assert.ok(count([90, 0, 85, 80], pink) > 150, 'left upright ear has a visible pink interior');
+  assert.ok(count([185, 0, 85, 80], pink) > 150, 'right upright ear has a visible pink interior');
+  assert.ok(count([120, 90, 120, 90], pink) > 900, 'rounded pink cheeks remain prominent');
+  assert.ok(count([70, 180, 85, 110], pink) > 350, 'a pink backpack is visible beside the body');
+  assert.ok(
+    count([110, 80, 140, 240], (r, g, b) => r > 250 && g > 245 && b > 245) > 15_000,
+    'fur is white, not the previous cream',
+  );
+  assert.equal(
+    count([155, 180, 70, 40], (r, g, b) => g > r + 5 && g > b),
+    0,
+    'the old mint neck scarf is absent',
+  );
+  // A 120px render retains both pink ear interiors and the high-contrast contour.
+  const small = await sharp(png).resize(120, 120).ensureAlpha().raw().toBuffer();
+  let smallPink = 0,
+    smallInk = 0;
+  for (let i = 0; i < small.length; i += 4) {
+    if (small[i + 3]! < 200) continue;
+    if (pink(small[i]!, small[i + 1]!, small[i + 2]!)) smallPink++;
+    if (small[i]! < 100 && small[i + 1]! < 90 && small[i + 2]! < 85) smallInk++;
+  }
+  assert.ok(
+    smallPink > 250 && smallInk > 400,
+    'signature color and contour survive chat-size downsampling',
+  );
+});

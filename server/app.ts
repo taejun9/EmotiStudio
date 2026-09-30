@@ -294,7 +294,7 @@ export function createApp(options: AppOptions = {}) {
   const validateReference = (url: string | null | undefined, userId: string) => {
     if (!url) return;
     if (
-      /^\/samples\/(reference|hello|love|sleepy|thanks|cheer|sorry|characters\/neulbo|characters\/tokki)\.png$/.test(
+      /^\/samples\/(reference|hello|love|sleepy|thanks|cheer|sorry|characters\/neulbo|characters\/tokki(?:-v2)?)\.png$/.test(
         url,
       )
     )

@@ -62,6 +62,7 @@ import type {
   ProjectFormat,
 } from '../shared/types';
 import { KAKAO_STICKER_COUNTS, ACTION_SUGGESTIONS } from '../shared/types';
+import { CHARACTER_PRESETS } from '../shared/character-presets';
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -125,33 +126,6 @@ const sampleDescription = (project: ProjectDetail) => {
     .filter(Boolean)
     .join(' ');
 };
-const CHARACTER_PRESETS: {
-  id: BuiltinCharacter;
-  name: string;
-  concept: string;
-  personality: string;
-  audience: string;
-  image: string;
-}[] = [
-  {
-    id: 'neulbo',
-    name: '늘보군',
-    concept:
-      '느긋하고 다정한 나무늘보. 포근한 갈색 털과 동그란 얼굴, 작은 가방이 특징이에요. 소소한 일상의 감정을 천천히 전해요.',
-    personality: '느긋하고 다정한 말투, 엉뚱한 귀여움',
-    audience: '친구와 일상을 나누는 사람',
-    image: '/samples/characters/neulbo.png',
-  },
-  {
-    id: 'tokki',
-    name: '토끼찬구',
-    concept:
-      '아이보리색 토끼. 한쪽 귀가 접혀 있고 민트 스카프와 당근 가방을 메고 있어요. 다정하지만 장난기 많은 친구의 일상을 표현해요.',
-    personality: '다정하지만 장난기 많은 친구, 짧고 친근한 말투',
-    audience: '친구와 즐거운 일상을 나누는 사람',
-    image: '/samples/characters/tokki.png',
-  },
-];
 const isBusyJob = (project: ProjectDetail) =>
   project.job?.status === 'queued' || project.job?.status === 'running';
 const formatLabel = (format: ProjectFormat) =>
@@ -1206,7 +1180,7 @@ function CharacterConceptForm({
             personality: preset.personality,
             audience: preset.audience,
             builtinCharacter: id,
-            referenceUrl: null,
+            referenceUrl: preset.image,
           }
         : {
             name: '',
@@ -1288,11 +1262,7 @@ function CharacterConceptForm({
                   }}
                 />
                 <strong>{preset.name}</strong>
-                <span>
-                  {preset.id === 'tokki'
-                    ? '장난기 가득한 다정한 친구'
-                    : '느려도 괜찮은 포근한 하루'}
-                </span>
+                <span>{preset.tagline}</span>
               </label>
             ))}
             <label className={input.builtinCharacter === null ? 'selected' : ''}>

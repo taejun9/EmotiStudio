@@ -744,8 +744,348 @@ function accents(id: string, l: Layout) {
   }
 }
 
+// Tokki Changu's second authored design: upright ears, pink cheeks and a real
+// backpack. This renderer is separate so the existing Neulbo pixels stay intact.
+const TOKKI_INK = '#402D28';
+const TOKKI_WHITE = '#FFFDFA';
+const TOKKI_PINK = '#F3A5AE';
+const TOKKI_CHEEK = '#FFDFDB';
+const tokkiPath = (d: string, fill = 'none', width = 5.2) => path(d, fill, TOKKI_INK, width);
+
+function tokkiHeadPoint(l: Layout, x: number, y: number): Point {
+  const angle = (l.tilt * Math.PI) / 180;
+  return p(
+    l.hx + x * Math.cos(angle) - y * Math.sin(angle),
+    l.hy + x * Math.sin(angle) + y * Math.cos(angle),
+  );
+}
+
+function tokkiBackpack(l: Layout) {
+  const x = l.bx - l.rx - 6,
+    y = l.by - 4;
+  return group(
+    tokkiPath('M-8 -34 Q-12 -57 9 -56 Q25 -55 21 -37', 'none', 4.4) +
+      tokkiPath(
+        'M-22 -22 Q-24 -44 0 -44 H15 Q32 -42 32 -20 L31 34 Q17 45 -14 37 Q-25 35 -22 -22Z',
+        '#F6B3B9',
+      ) +
+      path('M-15 -24 Q-14 -35 0 -35 H14 Q23 -33 22 -21', 'none', '#FFE4E2', 3.4) +
+      tokkiPath('M-19 7 Q5 3 27 9 L26 28 Q5 36 -18 28Z', '#EE9DA8', 3.5) +
+      tokkiPath('M-9 15 h11', 'none', 2.8) +
+      // Small hanging charm, not a carrot-shaped handbag or cross-body strap.
+      tokkiPath('M-15 -2 q-6 2 -3 10', 'none', 2.8) +
+      group(
+        tokkiPath('M-7 -9 Q0 -15 8 -8 Q12 3 0 22 Q-11 6 -7 -9Z', '#FAA75D', 3.1) +
+          tokkiPath(
+            'M-3 -11 Q-10 -20 -3 -22 L1 -16 Q3 -29 8 -23 L6 -14 Q17 -20 12 -11Z',
+            '#86A777',
+            2.7,
+          ) +
+          path('M-6 -1 l7 2 M-3 9 l5 1', 'none', '#D77C46', 2),
+        'translate(-13 15) rotate(10)',
+      ),
+    `translate(${x} ${y}) rotate(-5)`,
+  );
+}
+
+function tokkiBody(l: Layout, id: string) {
+  const left = tokkiHeadPoint(l, -36, 47),
+    right = tokkiHeadPoint(l, 36, 47);
+  if (id === 'sleepy') {
+    return (
+      tokkiPath(
+        `M${left.x} ${left.y} C158 253 119 247 102 269 Q82 287 106 303 Q121 310 143 302 Q164 315 192 297 L${right.x} ${right.y}Z`,
+        TOKKI_WHITE,
+      ) + tokkiPath('M104 286 Q91 288 102 301 Q117 310 129 299', TOKKI_WHITE, 4.5)
+    );
+  }
+  if (id === 'hurry') {
+    return (
+      tokkiPath(
+        `M${left.x} ${left.y} C146 194 132 228 146 252 C143 261 127 273 113 283 Q102 292 110 300 Q119 310 132 304 Q154 291 170 266 Q181 272 193 265 Q207 281 224 287 Q240 293 249 281 Q253 269 239 264 L222 253 C241 224 240 193 ${right.x} ${right.y}Z`,
+        TOKKI_WHITE,
+      ) +
+      tokkiPath('M217 260 Q207 255 200 246', 'none', 3.4) +
+      path('M118 296 l2 5 M126 293 l3 5 M238 275 l5 3', 'none', TOKKI_INK, 2.4)
+    );
+  }
+  const [a, b] = l.feet;
+  const bottom = Math.max(a.y, b.y);
+  return (
+    tokkiPath(
+      `M${left.x} ${left.y} C${l.bx - l.rx + 4} ${l.by - 34} ${l.bx - l.rx - 7} ${l.by + 9} ${a.x - 19} ${a.y - 11} Q${a.x - 23} ${a.y + 15} ${a.x - 4} ${a.y + 15} Q${a.x + 15} ${a.y + 16} ${l.bx - 15} ${bottom - 18} Q${l.bx} ${bottom - 14} ${l.bx + 15} ${bottom - 18} Q${b.x - 13} ${b.y + 16} ${b.x + 6} ${b.y + 15} Q${b.x + 26} ${b.y + 14} ${b.x + 19} ${b.y - 13} C${l.bx + l.rx + 7} ${l.by + 8} ${l.bx + l.rx - 2} ${l.by - 33} ${right.x} ${right.y}Z`,
+      TOKKI_WHITE,
+    ) +
+    path(
+      `M${a.x - 5} ${a.y + 9} v5 M${a.x + 3} ${a.y + 9} v5 M${b.x - 2} ${b.y + 9} v5 M${b.x + 6} ${b.y + 9} v5`,
+      'none',
+      TOKKI_INK,
+      2.8,
+    )
+  );
+}
+
+function tokkiStraps(l: Layout) {
+  const x = l.bx,
+    y = l.by;
+  return (
+    tokkiPath(
+      `M${x - 32} ${y - 49} Q${x - 54} ${y - 28} ${x - 42} ${y + 3} Q${x - 33} ${y + 15} ${x - 29} ${y + 2} Q${x - 41} ${y - 21} ${x - 20} ${y - 42}Z`,
+      '#F6B3B9',
+      4,
+    ) +
+    tokkiPath(
+      `M${x + 28} ${y - 47} Q${x + 48} ${y - 27} ${x + 40} ${y + 2} Q${x + 34} ${y + 11} ${x + 28} ${y + 2} Q${x + 37} ${y - 23} ${x + 17} ${y - 42}Z`,
+      '#F6B3B9',
+      4,
+    )
+  );
+}
+
+function tokkiArm(start: Point, end: Point, side: number) {
+  const middle = p((start.x + end.x) / 2 + side * 9, (start.y + end.y) / 2 + 10);
+  const curve = `M${start.x} ${start.y} Q${middle.x} ${middle.y} ${end.x} ${end.y}`;
+  return path(curve, 'none', TOKKI_INK, 35) + path(curve, 'none', TOKKI_WHITE, 25);
+}
+
+function tokkiPaw(point: Point, start: Point) {
+  const angle = (Math.atan2(point.y - start.y, point.x - start.x) * 180) / Math.PI + 90;
+  // One broad thumb and a smooth mitten remain readable in a small chat bubble.
+  // The wrist stays open so no circular seam separates the paw from the arm.
+  const contour =
+    'M-12 9 C-17 5 -17 -2 -13 -7 Q-10 -12 -6 -8 Q-8 -17 -1 -18 C8 -19 15 -12 15 -3 Q17 5 11 10';
+  return group(
+    path(`${contour}Z`, TOKKI_WHITE, 'none') +
+      tokkiPath(contour, 'none', 4.5) +
+      tokkiPath('M-2 -11 q2 -3 4 -1 M5 -9 q2 -3 4 -1', 'none', 1.9),
+    `translate(${point.x} ${point.y}) rotate(${n(angle)})`,
+  );
+}
+
+function tokkiUmbrella() {
+  // The offset shaft stays outside the cheek and passes through the gripping
+  // paw. Keeping it behind the paw gives a visible, continuous handhold.
+  return (
+    tokkiPath(
+      'M151 115 Q247 7 342 115 Q318 99 291 119 Q267 103 240 120 Q215 103 188 121Z',
+      GOLD,
+      5,
+    ) +
+    tokkiPath('M266 88 V293 Q266 310 253 304 Q247 301 250 294', 'none', 5) +
+    path(
+      'M84 132 l-5 12 M111 95 l-5 12 M308 160 l-5 12 M324 205 l-5 12 M83 231 l-5 12',
+      'none',
+      BLUE,
+      5,
+    )
+  );
+}
+
+function tokkiCoffee(l: Layout, lift: number) {
+  const x = l.bx,
+    y = l.by - lift;
+  return (
+    tokkiPath(
+      `M${x + 32} ${y - 20} Q${x + 65} ${y - 24} ${x + 50} ${y + 9} H${x + 29}`,
+      'none',
+      9,
+    ) +
+    rect(x - 34, y - 31, 68, 59, 13, '#D0DFCB', TOKKI_INK) +
+    ellipse(x, y - 29, 32, 8, '#AB8369', TOKKI_INK, 3) +
+    heart(x, y + 8, 0.3, CREAM) +
+    (lift < 24
+      ? path(
+          `M${x - 10} ${y - 51} q-9 -9 0 -16 M${x + 13} ${y - 51} q-9 -9 0 -16`,
+          'none',
+          '#AEADA0',
+          3,
+        )
+      : '')
+  );
+}
+
+function tokkiWatch(hand: Point) {
+  // The watch sits on the forearm rather than underneath the palm.
+  return group(
+    rect(-11, -13, 22, 28, 6, '#D6B794', TOKKI_INK, 3) +
+      ellipse(0, 0, 11, 11, CREAM, TOKKI_INK, 2.5) +
+      tokkiPath('M0 -6 v7 l5 3', 'none', 2.5),
+    `translate(${hand.x + 7} ${hand.y + 19}) rotate(-15)`,
+  );
+}
+
+function tokkiFace(id: string, l: Layout, phase: number, frame: number, variant: number) {
+  const blink = frame === 5 || frame === 6;
+  const sleepy = ['sleepy', 'goodnight', 'tired'].includes(id);
+  const sad = ['cry', 'sorry', 'rainy', 'sick'].includes(id);
+  const happy = ['thanks', 'cheer', 'laugh', 'yummy', 'celebrate', 'birthday', 'welcome'].includes(
+    id,
+  );
+  const wink = id === 'okay' || (variant % 3 === 1 && !sad && !sleepy);
+  const earFlex = Math.sin(phase) * 1.8;
+  let art = '';
+  // Both ears rise from the head contour. The slight flex is a local ear-tip
+  // articulation; head outline, face position and torso never use phase.
+  art += tokkiPath(
+    `M-47 -43 C-63 -64 ${-59 + earFlex} -110 -42 -113 C-24 -116 -22 -82 -26 -48Z`,
+    TOKKI_WHITE,
+  );
+  art += path(`M-45 -57 Q${-54 + earFlex} -98 -43 -100 Q-33 -104 -34 -59Z`, '#FFD2D0', 'none');
+  art += tokkiPath(
+    `M18 -50 C18 -75 ${27 - earFlex} -115 46 -112 C67 -107 52 -66 42 -44Z`,
+    TOKKI_WHITE,
+  );
+  art += path(`M28 -58 Q${32 - earFlex} -99 44 -99 Q54 -94 37 -54Z`, '#FFD2D0', 'none');
+  const head =
+    'M-36 50 C-63 42 -77 17 -71 -10 Q-68 -40 -39 -53 Q-20 -65 1 -61 Q30 -64 50 -46 Q75 -28 73 1 C76 29 57 46 36 50';
+  art += path(`${head}Z`, TOKKI_WHITE, 'none');
+  art += tokkiPath(head, 'none', 5.4);
+  art +=
+    ellipse(-45, 18, 15.2, 15.2, TOKKI_CHEEK, 'none') +
+    ellipse(45, 18, 15.2, 15.2, TOKKI_CHEEK, 'none');
+  for (const side of [-1, 1]) {
+    const x = side * 20;
+    if (id === 'love') art += heart(x, 4, 0.2, TOKKI_INK);
+    else if (id === 'surprise' && !blink) art += ellipse(x, -2, 5.8, 8.3, TOKKI_INK, 'none');
+    else if (id === 'angry')
+      art += tokkiPath(`M${x - side * 5} 0 L${x + side * 4} -3`, 'none', 4.8);
+    else if (id === 'coffee') art += tokkiPath(`M${x - 5} 0 q5 5 10 0`, 'none', 3.8);
+    else if (id === 'waiting' && !blink) art += ellipse(x + 3, 3, 3.8, 4.8, TOKKI_INK, 'none');
+    else if (id === 'busy' && !blink) art += ellipse(x, 4, 3.7, 4.9, TOKKI_INK, 'none');
+    else if (id === 'tired' && !blink)
+      art += tokkiPath(`M${x - 5} 0 h10 M${x - 4} 6 h7`, 'none', 3.3);
+    else if (blink || sleepy || (wink && side === -1))
+      art += tokkiPath(`M${x - 5} 0 Q${x} 5 ${x + 5} 0`, 'none', 4);
+    else if (happy) art += tokkiPath(`M${x - 5} 1 Q${x - 2} -7 ${x + 5} -1`, 'none', 4);
+    else art += ellipse(x, -1, 3.9, sad ? 5.2 : 5.8, TOKKI_INK, 'none');
+  }
+  if (!sleepy) {
+    if (sad) art += tokkiPath('M-28 -17 q7 5 12 -1 M14 -18 q7 5 13 -1', 'none', 3.6);
+    else if (id === 'angry' || id === 'no')
+      art += tokkiPath('M-30 -19 l11 8 M16 -10 l12 -6', 'none', 4.6);
+    else if (id === 'coffee')
+      art += tokkiPath('M-28 -16 q6 -4 12 0 M15 -17 q6 -3 12 1', 'none', 3.4);
+    else if (id === 'waiting') art += tokkiPath('M-28 -15 h11 M15 -20 l11 3', 'none', 3.7);
+    else if (id === 'hurry' || id === 'busy')
+      art += tokkiPath('M-29 -20 l10 8 M15 -11 l12 -7', 'none', 4.2);
+    else if (id === 'confused') art += tokkiPath('M-28 -17 l10 3 M15 -18 l11 -8', 'none', 3.7);
+    else if (id === 'surprise') art += tokkiPath('M-27 -20 l8 -5 M15 -25 l11 5', 'none', 3.8);
+    else art += tokkiPath(`M-29 -20 l10 ${happy ? 5 : 8} M15 -14 l12 -4`, 'none', 4.2);
+  }
+  art += ellipse(0, 9, 6, 4.2, TOKKI_INK, 'none');
+  if (id === 'surprise' || id === 'hungry' || (sleepy && frame > 2 && frame < 5))
+    art +=
+      ellipse(0, 28, 7 + Math.sin(phase), 10, TOKKI_INK, 'none') +
+      ellipse(0, 33, 4, 3, '#F4B3BA', 'none');
+  else if (id === 'cry')
+    art += tokkiPath('M-11 28 Q0 16 11 28 Q7 40 0 32 Q-7 41 -11 28Z', '#F1B4BC', 3.4);
+  else if (id === 'sorry') art += tokkiPath('M-6 26 Q0 19 7 26', 'none', 3.2);
+  else if (sad) art += tokkiPath('M-7 28 Q0 20 8 28', 'none', 3.5);
+  else if (id === 'angry') art += tokkiPath('M-9 27 Q0 21 9 27', 'none', 3.8);
+  else if (id === 'no') art += tokkiPath('M-8 25 h16', 'none', 3.5);
+  else if (id === 'coffee')
+    art +=
+      Math.cos(phase) < 0
+        ? ellipse(0, 25, 4.5, 5.5, TOKKI_INK, 'none')
+        : tokkiPath('M-8 23 q8 8 16 0', 'none', 3.4);
+  else if (id === 'waiting')
+    art += tokkiPath(`M-7 26 q6 ${Math.cos(phase) < 0 ? -4 : 0} 14 0`, 'none', 3.5);
+  else if (id === 'busy') art += tokkiPath('M-6 25 h12', 'none', 3.4);
+  else if (id === 'hurry')
+    art += tokkiPath('M-9 21 Q0 18 10 23 L8 35 Q0 42 -8 34Z', TOKKI_PINK, 3.5);
+  else if (sleepy) art += tokkiPath('M0 14 v5 M-9 21 q5 7 9 -1 q5 7 10 0', 'none', 3.4);
+  else {
+    const wide = id === 'laugh' ? 18 : ['cheer', 'celebrate'].includes(id) ? 16 : 12;
+    const bottom = id === 'laugh' ? 44 : happy ? 41 : 37;
+    art += tokkiPath(
+      `M${-wide} 19 Q0 25 ${wide} 18 Q${wide - 1} ${bottom + Math.sin(phase) * 1.5} 0 ${bottom + 2} Q${-wide + 1} ${bottom} ${-wide} 19Z`,
+      TOKKI_PINK,
+      3.7,
+    );
+    art += path(
+      `M-7 ${bottom - 3} Q0 ${bottom - 8} 7 ${bottom - 3} Q0 ${bottom + 3} -7 ${bottom - 3}`,
+      '#FFD5D7',
+      'none',
+    );
+    art += tokkiPath('M0 13 v4 M-10 18 q6 6 10 -2 q5 6 11 1', 'none', 3.5);
+  }
+  if (id === 'cry')
+    art +=
+      path('M-24 10 Q-30 35 -22 40 Q-14 35 -19 11', BLUE, 'none') +
+      path('M18 11 Q12 37 22 41 Q32 34 25 11', BLUE, 'none');
+  if (id === 'shy')
+    art += path('M-48 15 l-3 7 M-41 15 l-3 7 M40 15 l-3 7 M47 15 l-3 7', 'none', '#E5A1A1', 2);
+  if (id === 'proud')
+    art +=
+      tokkiPath(
+        'M-53 -10 Q-34 -19 -9 -9 L-13 8 Q-32 21 -49 7Z M9 -9 Q33 -19 53 -10 L49 7 Q32 21 13 8Z',
+        TOKKI_INK,
+        3.8,
+      ) +
+      tokkiPath('M-10 -7 Q0 -12 10 -7', 'none', 4) +
+      path('M-40 -7 l12 -3 M23 -6 l12 -3', 'none', '#C3C9C6', 2.4);
+  if (id === 'sick')
+    art +=
+      rect(-29, 10, 58, 32, 11, '#F4F7F0', '#81968B', 2.8) +
+      path('M-23 20 h46 M-23 28 h46', 'none', '#C3D5CB', 2) +
+      rect(-26, -44, 52, 13, 4, '#C5DEDE', TOKKI_INK, 2.8);
+  if (id === 'exercise')
+    art += tokkiPath('M-67 -20 Q0 -39 67 -20 L63 -34 Q0 -48 -63 -33Z', TOKKI_PINK, 3.4);
+  return group(art, `translate(${l.hx} ${l.hy}) rotate(${l.tilt})`);
+}
+
+function drawTokkiFrame(planIndex: number, frame: number, variant: number) {
+  const id = STICKER_PLANS[planIndex]!.id;
+  const l = layoutFor(id);
+  const phase = (frame / 8) * Math.PI * 2;
+  const hands = handsFor(id, l, Math.sin(phase), variant);
+  const lift = (1 - Math.cos(phase)) / 2;
+  if (id === 'coffee') {
+    hands[0].y -= lift * 48;
+    hands[1].y -= lift * 48;
+  } else if (id === 'busy') {
+    hands[0].y -= Math.sin(phase) * 16;
+    hands[1].y += Math.sin(phase) * 16;
+  } else if (id === 'waiting') {
+    hands[1].y -= lift * 32;
+  } else if (id === 'rainy') hands[1] = p(266, l.by - 7);
+  const shoulders: [Point, Point] = [
+    p(l.bx - l.rx + 12, l.by - 31),
+    p(l.bx + l.rx - 12, l.by - 31),
+  ];
+  let art = (id === 'rainy' ? tokkiUmbrella() : propsBack(id, l, 'tokki')) + tokkiBackpack(l);
+  art += tokkiArm(shoulders[0], hands[0], -1) + tokkiArm(shoulders[1], hands[1], 1);
+  art += tokkiBody(l, id) + tokkiStraps(l) + tokkiFace(id, l, phase, frame, variant);
+  if (id === 'no')
+    art +=
+      tokkiArm(p(l.bx - 45, l.by + 25), hands[0], -1) +
+      tokkiArm(p(l.bx + 45, l.by + 25), hands[1], 1);
+  // Forearms travel with the held objects. The torso stays in its authored
+  // position; only these connected limbs and the cup/watch articulate.
+  if (id === 'coffee' || id === 'busy')
+    art += tokkiArm(shoulders[0], hands[0], -1) + tokkiArm(shoulders[1], hands[1], 1);
+  if (id === 'waiting') art += tokkiArm(p(l.bx + 53, l.by + 35), hands[1], 1);
+  if (id === 'coffee') art += tokkiCoffee(l, lift * 48);
+  else if (id !== 'waiting') art += propsFront(id, l, hands, 'tokki');
+  if (id === 'busy') {
+    art += path(`M${l.bx - 60} ${l.by + 23} h120`, 'none', '#719599', 2.5);
+    for (let key = -2; key <= 2; key++)
+      art += rect(l.bx + key * 20 - 6, l.by + 14, 12, 6, 2, '#E2ECE6', 'none');
+  }
+  art += tokkiPaw(hands[0], shoulders[0]) + tokkiPaw(hands[1], shoulders[1]);
+  if (id === 'waiting') art += tokkiWatch(hands[1]);
+  if (id === 'busy')
+    art +=
+      rect(l.bx - 71, l.by + 31, 142, 39, 8, '#AECAD0') +
+      ellipse(l.bx, l.by + 48, 9, 9, CREAM, INK, 2.5);
+  art += accents(id, l);
+  art = art.replaceAll(INK, TOKKI_INK).replaceAll(DARK, TOKKI_INK);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360"><g stroke-linejoin="round" stroke-linecap="round">${art}</g></svg>`;
+}
+
 /** The body, head, feet, bag and scene layout never use the animation phase. */
 function drawFrame(character: BuiltInCharacter, planIndex: number, frame: number, variant: number) {
+  if (character === 'tokki') return drawTokkiFrame(planIndex, frame, variant);
   const id = STICKER_PLANS[planIndex]!.id;
   const l = layoutFor(id);
   const phase = (frame / 8) * Math.PI * 2;

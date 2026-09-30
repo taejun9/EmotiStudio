@@ -21,7 +21,7 @@ import type {
 
 export type Row = Record<string, any>;
 export const inferBuiltin = (name: string): 'neulbo' | 'tokki' | null =>
-  /토끼|tokki|rabbit/i.test(name) ? 'tokki' : /늘보|neulbo|sloth/i.test(name) ? 'neulbo' : null;
+  /토[끼키]|tokki|rabbit/i.test(name) ? 'tokki' : /늘보|neulbo|sloth/i.test(name) ? 'neulbo' : null;
 export const now = () => new Date().toISOString();
 export const id = () => randomUUID();
 export interface VersionMedia {
