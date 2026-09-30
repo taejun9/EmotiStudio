@@ -1,47 +1,56 @@
 # QA와 리뷰 규칙
 
-## 현재 실행 명령
+## 실행 환경과 명령
 
-제품 스택은 미정이다. 외부 패키지 설치 없이 Python 3.9 이상 표준 라이브러리와 Git을 사용한다. 이번 환경에서 Python 3.14.5로 확인했다.
-
-저장소 또는 작업 worktree 루트에서:
+Node.js 24.15 이상, Python 3.9 이상, Git을 사용한다. 작업 worktree에서 `npm ci`로 의존성과 Git hook을 설치한다. 현재 앱에는 별도 ESLint 명령이 없으며 형식 검사는 Prettier, 타입 검사는 TypeScript로 실행한다.
 
 ```sh
 python3 harness/scripts/verify_base.py --implementation
-python3 harness/scripts/verify_base.py
-python3 -B -m unittest discover -s harness/tests -p 'test_*.py'
+npm run verify
 git diff --check
+git diff --cached --check
 ```
 
-구현 중에는 첫 명령을 사용한다. 활성 계획을 completed로 옮긴 후와 main에서는 기본 명령을 사용한다. 스크립트는 성공 0, 규칙 위반 1을 반환한다. `--root /path/to/repo`로 별도 fixture의 구조만 검사할 수 있다. `git diff --cached --check`는 커밋 직전 staged 변경에도 실행한다.
+구현 중에는 `--implementation`으로 작업 브랜치·활성 계획·linked worktree를 검사한다. 계획을 completed로 이동한 후와 main에서는 기본 구조 검사인 `npm run harness:check`를 사용한다.
 
-| 검사 | 현재 상태 | 도입 시점 |
-|---|---|---|
-| 기반 구조·계획·문서 링크 | verify_base.py로 실행 가능 | 지금 |
-| 앱 unit/integration | 미정 — 앱 코드 없음 | 스택 선택·첫 기능 |
-| lint/typecheck/build | 미정 — 도구·패키지 없음 | 최소 앱 셸 |
-| 파일 규격 검사 | 설계만 있음 | 프리셋 근거 확보·검사기 구현 |
-| 실제 AI 품질·비용·E2E | 미구현 | 공급자 선택 및 호출 범위 확정 |
+| 명령                    | 검사 범위                                             |
+| ----------------------- | ----------------------------------------------------- |
+| `npm run format:check`  | Prettier 형식                                         |
+| `npm run harness:check` | 문서·계획·리뷰·링크 구조                              |
+| `npm run test:harness`  | Python 구조 검사 회귀 테스트와 Node Git 정책 테스트   |
+| `npm run typecheck`     | TypeScript 타입                                       |
+| `npm test`              | Node 테스트 러너 기반 앱 단위·API 통합·미디어 회귀    |
+| `npm run build`         | 타입 검사와 Vite production 빌드                      |
+| `npm run test:e2e`      | Playwright 브라우저 흐름·접근성 검사; 먼저 build 필요 |
+| `npm run qa`            | 형식·하네스 구조/회귀·타입·앱 테스트·빌드             |
+| `npm run verify`        | qa와 E2E                                              |
 
-설정되지 않은 npm 명령이나 빈 성공 스크립트를 추가하지 않는다. 스택을 정하면 실제 통과하는 명령을 이 문서에 기록하고 README 변경은 별도 요청 범위에 맞춰 진행한다.
+CI에서도 같은 품질 검사를 실행하고 새 커밋 범위의 Git 메시지 정책을 검사한다. 로컬 성공만으로 원격 필수 검사가 통과했다고 기록하지 않는다.
 
-## 기반 QA
+## 데이터 격리와 증거
 
-필수 디렉터리·파일, 최소 루트 Markdown, docs/plan 금지, 계획 파일명·번호·상태·필수 섹션, 완료 계획/리뷰 대응, Markdown 상대 파일 링크를 검사한다. 링크는 inline Markdown의 파일 존재만 검사하며 anchor·외부 URL·문서 내용의 진위는 검사하지 않는다. 외부 출처는 수동 확인한다.
+API 테스트는 임시 디렉터리의 DB를 사용한다. E2E는 `127.0.0.1:4173`의 빌드된 production 앱을 전용 서버로 실행하고 임시 데이터 디렉터리를 종료 시 정리한다. 개발 서버나 기본 `./data`를 재사용하지 않으며 실제 이미지 API 키는 비운다. 로컬 브라우저는 설치된 Google Chrome, CI는 Playwright Chromium을 사용한다. CI 브라우저 설치 명령은 `npx playwright install --with-deps chromium`이다.
 
-스크립트를 변경할 때는 정상 fixture와 누락 파일·잘못된 계획 이름·리뷰 없는 완료 계획 등 실패 fixture를 임시 디렉터리에서 확인한다. 제품 기능 테스트를 모방하는 빈 테스트는 만들지 않는다.
+실제 AI 호출은 기본 QA에 넣지 않는다. 필요한 경우 비용과 전송할 이미지 범위를 명시하고 모의 응답·sample 테스트와 구분해 기록한다. 검증 기록은 [docs/QA.md](../QA.md)와 해당 실행 계획에 둔다. 어떤 테스트가 통과했는지와 미검증 영역을 구분한다.
 
-## 향후 제품 QA
+## 하네스와 Git 정책 QA
 
-- 캐릭터/프로젝트 분리, 바이블 갱신 시 기존 후보의 원래 버전 유지.
-- 선택 후보 기반 수정, 계보 보존, 실패·취소·중복 요청에서 선택 유실 방지.
-- 검사 개수·크기·용량 경계, 실제 포맷 불일치·불투명 이미지·누락/중복 이름.
-- 프리셋 근거 unknown이면 통과 금지, 버전 변경 시 stale 처리.
-- ZIP 경로 안전성, 검사한 파일과 내보낸 파일 일치, 비밀·원본 경로 배제.
-- 실제 AI 호출 테스트는 기본 QA에 넣지 않고 비용과 데이터 전송 범위를 명시한다.
+구조 검사기는 필수 파일·디렉터리, 루트 Markdown, `docs/plan` 금지, 계획 이름·번호·상태·섹션, 완료 계획/리뷰 대응, Markdown 상대 파일 링크를 검사한다. inline 파일 링크의 존재만 검사하며 anchor·외부 URL·문서 내용의 진위는 검사하지 않는다.
+
+정책 변경에는 실제 실패를 검출하는 fixture를 사용한다. 잘못된 브랜치·worktree·staged 계획·커밋 메시지·main push와 정상 흐름을 검사하며 사용자의 실제 저장소나 원격을 테스트 fixture로 쓰지 않는다. hook 설치와 실행은 [작업 생명주기](../architecture/harness.md)와 [Git 규칙](git-rules.md)을 따른다. 과거 커밋에 새 규칙을 소급 적용해 역사를 다시 쓰지 않는다.
+
+## 제품 회귀와 후속 검사
+
+현재 구현의 소유권·게스트 이관·생성 한도, 부분 실패·중복 실행, 버전·대사 원본 보존, 프레임 출력, 승인·완료·ZIP 조건을 해당 앱 테스트로 확인한다. 다음 설계를 구현할 때는 추가 인수 검사를 계획한다.
+
+- 바이블 갱신 시 이전 후보의 원래 버전과 입력 스냅샷 보존.
+- 후보 계보·취소·늦은 결과에서 사용자 선택 유실 방지.
+- 규격 개수·크기·용량 경계, 실제 포맷·투명도·누락/중복 파일명.
+- 근거 unknown을 통과로 처리하지 않기, 규격·선택 변경 시 stale 처리.
+- 검사한 파일과 ZIP의 일치, 경로 안전성, 비밀과 원본 업로드 배제.
 
 ## 리뷰
 
-QA 완료 후 [리뷰 템플릿](../../harness/templates/review.md)을 사용한다. 요구사항 누락, 데이터 경계, 출처 없는 규격·정책 주장, 작동하지 않는 명령을 살핀다. 수정이 생기면 관련 QA부터 다시 한다. 실패/미검증/독립성 한계를 숨기지 않는다.
+QA 완료 후 [리뷰 템플릿](../../harness/templates/review.md)을 사용한다. 요구사항 누락, 데이터 경계, 출처 없는 규격·정책 주장, 작동하지 않는 명령을 살핀다. 수정이 생기면 관련 QA부터 다시 실행한다. 실패·미검증·리뷰 독립성의 한계를 숨기지 않는다.
 
-완료 계획은 completed로 이동하고 같은 basename의 리뷰를 docs/reviews에 둔다. 검증 성공은 앱 작동·카카오 적합성·법적 권리를 보증하지 않는다.
+완료 계획은 completed로 이동하고 같은 basename의 리뷰를 `docs/reviews/`에 둔다. 하네스 통과는 앱 기능 전체·카카오 적합성·법적 권리를 보증하지 않는다.

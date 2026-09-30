@@ -8,15 +8,15 @@
 
 ## 버전에 필요한 필드
 
-| 필드 | 의미 |
-|---|---|
-| id / version | 프리셋 식별자와 불변 버전 |
-| platform / type / stage | 플랫폼, 정지/움직임/큰 유형, 제안/상품화 단계 |
-| evidence_status | draft / verified / needs_recheck / retired |
-| sources / checked_at | 원문 URL·절/제목·짧은 근거 또는 의역, 확인 날짜 |
-| rules | 룰별 식별자, 적용 대상, 값·단위, 필수/권장, 출처 |
-| file_groups | 본 이미지·샘플·대표 이미지 등 그룹별 수량·형식 |
-| naming / packaging | 파일명·순서·추가 파일 규칙, 플랫폼 규칙인지 앱 관례인지 표시 |
+| 필드                    | 의미                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| id / version            | 프리셋 식별자와 불변 버전                                    |
+| platform / type / stage | 플랫폼, 정지/움직임/큰 유형, 제안/상품화 단계                |
+| evidence_status         | draft / verified / needs_recheck / retired                   |
+| sources / checked_at    | 원문 URL·절/제목·짧은 근거 또는 의역, 확인 날짜              |
+| rules                   | 룰별 식별자, 적용 대상, 값·단위, 필수/권장, 출처             |
+| file_groups             | 본 이미지·샘플·대표 이미지 등 그룹별 수량·형식               |
+| naming / packaging      | 파일명·순서·추가 파일 규칙, 플랫폼 규칙인지 앱 관례인지 표시 |
 
 확인되지 않은 필수 값은 null/unknown으로 남긴다. 생략한 조건과 제한이 없는 조건은 구분한다. 서로 다른 제안·상품화 규칙을 합쳐 하나의 “카카오 규격”으로 만들지 않는다. 큰 이모티콘 등의 여러 허용 크기는 단일 폭·높이로 뭉개지 않는다.
 

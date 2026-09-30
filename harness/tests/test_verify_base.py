@@ -2,7 +2,6 @@
 
 import importlib.util
 from pathlib import Path
-import shutil
 import tempfile
 import unittest
 
@@ -17,14 +16,17 @@ class BaseGateTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='emoti-base-test-')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        for name in ('AGENTS.md', 'README.md', '.gitignore'):
-            shutil.copy2(REPOSITORY / name, self.root / name)
-        for name in ('docs', 'harness'):
-            shutil.copytree(REPOSITORY / name, self.root / name, ignore=shutil.ignore_patterns('__pycache__'))
-        # Use a predictable active plan; the real repo may be active or completed.
-        for folder in ('docs/exec_plans/active', 'docs/exec_plans/completed', 'docs/reviews'):
-            for plan in (self.root / folder).glob('plan-*.md'):
-                plan.unlink()
+        # Keep failure fixtures independent of changing product documentation.
+        # harness:check separately validates the actual repository and its links.
+        for name in VERIFY.DIRECTORIES:
+            (self.root / name).mkdir(parents=True, exist_ok=True)
+        for name in VERIFY.FILES:
+            target = self.root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text('# Fixture\n')
+        for name in ('exec-plan.md', 'review.md'):
+            relative = Path('harness/templates') / name
+            (self.root / relative).write_text((REPOSITORY / relative).read_text())
         self.plan = self.root / 'docs/exec_plans/active/plan-001-fixture.md'
         template = (self.root / 'harness/templates/exec-plan.md').read_text()
         self.plan.write_text(template.replace('plan-NNN-task-name', 'plan-001-fixture'))

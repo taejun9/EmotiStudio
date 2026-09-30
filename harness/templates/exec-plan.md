@@ -45,14 +45,14 @@ QA 통과 후 요구 누락·회귀·데이터·근거를 검토한다. 독립 �
 
 ## Decision Log
 
-| date | decision | reason |
-|---|---|---|
-| YYYY-MM-DD | TODO | TODO |
+| date       | decision | reason |
+| ---------- | -------- | ------ |
+| YYYY-MM-DD | TODO     | TODO   |
 
 ## Progress Log
 
-| date | role | note |
-|---|---|---|
+| date       | role | note      |
+| ---------- | ---- | --------- |
 | YYYY-MM-DD | 총괄 | 계획 생성 |
 
 ## Completion Notes
