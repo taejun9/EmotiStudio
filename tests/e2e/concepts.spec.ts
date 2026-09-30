@@ -11,11 +11,14 @@ test('rabbit concept groups sets, has 32 distinct scenes, and edits only one sti
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
   const concept = await createConcept(page, '토끼찬구의 다정한 하루', '토끼찬구');
+  expect(concept.referenceUrl).toBe('/samples/characters/tokki-v2.png');
   const project = await createSet(page, '토끼찬구의 32가지 마음', 'static', false);
   await page.getByRole('button', { name: /직접 입력하기/ }).click();
   await page
     .getByLabel('원하는 방향', { exact: true })
-    .fill('장난기 많고 다정한 토끼찬구의 소소한 하루, 민트 스카프와 당근 가방을 유지해요.');
+    .fill(
+      '밝고 활발한 토끼찬구의 소소한 하루, 흰 몸과 곧은 두 귀, 분홍 백팩과 당근 키링을 유지해요.',
+    );
   await page.getByRole('button', { name: '이 방향 선택', exact: true }).click();
   await page.getByRole('button', { name: '이모티콘 생성', exact: true }).click();
   const detail = async () =>

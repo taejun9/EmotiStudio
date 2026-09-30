@@ -257,3 +257,76 @@ test('tokki static32 and animated24 are distinct poses; caption edits preserve c
     assert.equal(manifest.stickers[0].poseId, 'hello');
     assert.equal(manifest.stickers[0].caption, null);
   }));
+
+test('new Tokki reference is selectable while previous concept snapshots and explicit custom references remain intact', async () =>
+  withApp(async (app) => {
+    const client = request.agent(app.app);
+    await client.get('/api/bootstrap').expect(200);
+    const old = (
+      await client
+        .post('/api/concepts')
+        .send({
+          ...base,
+          referenceUrl: '/samples/characters/tokki.png',
+          concept: '이전 민트 스카프 캐릭터 기록',
+        })
+        .expect(201)
+    ).body;
+    const oldSet = (
+      await client
+        .post(`/api/concepts/${old.id}/projects`)
+        .send({ name: '이전 세트', format: 'static' })
+        .expect(201)
+    ).body;
+    const modern = (
+      await client
+        .post('/api/concepts')
+        .send({
+          ...base,
+          builtinCharacter: undefined,
+          characterName: '토키 찬구',
+          referenceUrl: '/samples/characters/tokki-v2.png',
+          concept: '곧은 분홍 귀, 흰 몸, 분홍 백팩과 당근 키링',
+        })
+        .expect(201)
+    ).body;
+    const modernSet = (
+      await client
+        .post(`/api/concepts/${modern.id}/projects`)
+        .send({ name: '새 설정화 세트', format: 'animated' })
+        .expect(201)
+    ).body;
+    assert.equal(modernSet.referenceUrl, '/samples/characters/tokki-v2.png');
+    assert.equal(modernSet.builtinCharacter, 'tokki');
+    assert.equal(
+      (await client.get(`/api/projects/${oldSet.id}`).expect(200)).body.referenceUrl,
+      '/samples/characters/tokki.png',
+    );
+    assert.equal(
+      (await client.get(`/api/projects/${oldSet.id}`).expect(200)).body.concept,
+      '이전 민트 스카프 캐릭터 기록',
+    );
+    const oldImage = (await client.get('/samples/characters/tokki.png').expect(200)).body as Buffer;
+    const newImage = (await client.get('/samples/characters/tokki-v2.png').expect(200))
+      .body as Buffer;
+    assert.notEqual(
+      createHash('sha256').update(oldImage).digest('hex'),
+      createHash('sha256').update(newImage).digest('hex'),
+    );
+    await client.patch(`/api/concepts/${modern.id}`).send({ referenceUrl: null }).expect(200);
+    const noReference = (
+      await client
+        .post(`/api/concepts/${modern.id}/projects`)
+        .send({ name: '참고 이미지 제거', format: 'static' })
+        .expect(201)
+    ).body;
+    assert.equal(
+      noReference.referenceUrl,
+      null,
+      'removing a reference must not silently add a default image',
+    );
+    await client
+      .post('/api/concepts')
+      .send({ ...base, referenceUrl: '/samples/characters/tokki-v2/../../private.png' })
+      .expect(400);
+  }));
